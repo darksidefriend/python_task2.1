@@ -1,126 +1,182 @@
-Plain textANTLR4BashCC#CSSCoffeeScriptCMakeDartDjangoDockerEJSErlangGitGoGraphQLGroovyHTMLJavaJavaScriptJSONJSXKotlinLaTeXLessLuaMakefileMarkdownMATLABMarkupObjective-CPerlPHPPowerShell.propertiesProtocol BuffersPythonRRubySass (Sass)Sass (Scss)SchemeSQLShellSwiftSVGTSXTypeScriptWebAssemblyYAMLXML`   # Отчет: Развертывание статического сайта на GitHub Pages с MkDocs и автоматизация CI/CD  **Цель работы:**    Создать статический сайт-документацию с помощью Python-генератора **MkDocs**, автоматизировать деплой на **GitHub Pages** через **GitHub Actions**, а также исследовать альтернативные инструменты и платформы: российские CDN, возможности GitVerse для CI/CD и различные способы деплоя статических сайтов.  ---  ## 1. Создание и локальная разработка сайта на MkDocs  ### 1.1. Подготовка окружения Python  - Установлен Python версии 3.12 (актуальная на момент выполнения).  - Проверена работа менеджера пакетов:    ```bash    pip --version   `
+# Отчет: Развертывание статического сайта на GitHub Pages с MkDocs и автоматизация CI/CD
+Цель работы
+Создать статический сайт-документацию с помощью Python-генератора MkDocs, автоматизировать деплой на GitHub Pages через GitHub Actions, а также исследовать альтернативные инструменты и платформы (российские CDN, GitVerse, способы деплоя).
 
-*   bashpip install --user virtualenv
-    
-*   bashvirtualenv venvsource venv/bin/activate # для Linux/macOS# venv\\Scripts\\activate # для Windows
-    
+## 1. Создание и локальная разработка сайта на MkDocs
+Первым шагом была настройка изолированного окружения и установка генератора статических сайтов MkDocs.
 
-### 1.2. Установка MkDocs и инициализация проекта
+### Подготовка окружения Python
+Установлен Python 3.12.
 
-*   bashpip install mkdocs
-    
-*   bashmkdocs new my-static-sitecd my-static-site
-    
-*   textmy-static-site/├── mkdocs.yml # конфигурационный файл└── docs/ └── index.md # стартовая страница
-    
+Проверена работа менеджера пакетов:
 
-### 1.3. Наполнение контентом и локальный запуск
+bash
+pip --version
+Установлен virtualenv для изоляции проекта:
 
-*   В файл docs/index.md добавлен приветственный текст.
-    
-*   yamlsite\_name: Мой статический сайт на MkDocstheme: readthe docs
-    
-*   bashmkdocs serve
-    
-*   Сайт стал доступен по адресу http://127.0.0.1:8000.
-    
+bash
+pip install --user virtualenv
+Создано и активировано виртуальное окружение:
 
-2\. Подготовка репозитория и настройка CI/CD (GitHub Actions)
--------------------------------------------------------------
+bash
+virtualenv venv
+source venv/bin/activate  # для Linux/macOS
+venv\Scripts\activate  # для Windows
+Установка и инициализация MkDocs
+Установлен MkDocs и стандартная тема:
 
-Для автоматической сборки и публикации сайта при каждом пуше в ветку main был настроен пайплайн GitHub Actions.
+bash
+pip install mkdocs
+Создан новый проект:
 
-### 2.1. Инициализация Git и первый коммит
+bash
+mkdocs new my-static-site
+cd my-static-site
+Внутри каталога появились стандартные файлы: mkdocs.yml (конфигурация) и папка docs/ с файлом index.md.
 
-*   bashgit init
-    
-*   textvenv/site/\_\_pycache\_\_/\*.pyc
-    
-*   bashgit add .git commit -m "Initial commit with MkDocs project"
-    
+### Наполнение контентом
+В docs/index.md добавлен приветственный текст.
 
-### 2.2. Создание репозитория на GitHub и связь с локальным
-
-*   На GitHub создан новый репозиторий (например, my-static-site).
-    
-*   bashgit remote add origin https://github.com/username/my-static-site.gitgit push -u origin main
-    
-
-### 2.3. Настройка GitHub Actions workflow
-
-В корне репозитория создан каталог .github/workflows/ и внутри него файл deploy.yml.Использованы современные официальные экшены для загрузки артефактов и деплоя на GitHub Pages (аналог экшена "Static HTML").
+Файл mkdocs.yml изменён для настройки названия сайта и темы:
 
 yaml
+site_name: Мой статический сайт на MkDocs
+theme: readthedocs
+Локальный запуск для проверки
+bash
+mkdocs serve
+Сайт стал доступен по адресу http://127.0.0.1:8000.
 
-Plain textANTLR4BashCC#CSSCoffeeScriptCMakeDartDjangoDockerEJSErlangGitGoGraphQLGroovyHTMLJavaJavaScriptJSONJSXKotlinLaTeXLessLuaMakefileMarkdownMATLABMarkupObjective-CPerlPHPPowerShell.propertiesProtocol BuffersPythonRRubySass (Sass)Sass (Scss)SchemeSQLShellSwiftSVGTSXTypeScriptWebAssemblyYAMLXML`   name: Deploy MkDocs to Pages  on:    push:      branches: ["main"]    workflow_dispatch:  # Разрешения для GitHub Pages  permissions:    contents: read    pages: write    id-token: write  concurrency:    group: "pages"    cancel-in-progress: false  jobs:    build:      runs-on: ubuntu-latest      steps:        - name: Checkout repository          uses: actions/checkout@v4        - name: Setup Python          uses: actions/setup-python@v5          with:            python-version: '3.12'        - name: Install dependencies          run: |            pip install mkdocs        - name: Build site          run: mkdocs build        - name: Upload artifact          uses: actions/upload-pages-artifact@v3          with:            path: 'site/'    deploy:      environment:        name: github-pages        url: ${{ steps.deployment.outputs.page_url }}      runs-on: ubuntu-latest      needs: build      steps:        - name: Deploy to GitHub Pages          id: deployment          uses: actions/deploy-pages@v4   `
+## 2. Подготовка репозитория и настройка CI/CD (GitHub Actions)
+Для автоматизации сборки и публикации на GitHub Pages был настроен пайплайн непрерывной интеграции.
 
-### 2.4. Настройка GitHub Pages
+### Инициализация Git и репозитория
+В корне проекта выполнен git init.
 
-*   В репозитории перейдены в **Settings → Pages**.
-    
-*   В разделе **Build and deployment** выбран источник **GitHub Actions**.Это позволяет пайплайну самостоятельно управлять публикацией.
-    
+Создан файл .gitignore, в который добавлены папки venv/, site/, __pycache__/.
 
-3\. Результат и отладка
------------------------
+Создан репозиторий на GitHub, локальный репозиторий привязан к удалённому и произведён пуш кода.
 
-После пуша изменений в ветку main автоматически запустился workflow.Сборка прошла успешно, и сайт стал доступен по адресу:
+### Создание GitHub Actions Workflow
+В репозитории создана директория .github/workflows/ и внутри файл deploy.yml.
+
+Важно: Для деплоя на Pages используется официальный экшен actions/upload-pages-artifact и actions/deploy-pages, а не устаревший peaceiris/actions-gh-pages. Это соответствует современной рекомендации "Static HTML" для GitHub Pages.
+
+Содержимое файла deploy.yml:
+
+yaml
+name: Deploy MkDocs to Pages
+
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: |
+          pip install mkdocs
+
+      - name: Build site
+        run: mkdocs build
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: 'site/'
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+### Настройка GitHub Pages
+В настройках репозитория (Settings → Pages) выбран источник GitHub Actions. Это позволяет пайплайну самостоятельно публиковать артефакты.
+
+## 3. Результат и отладка
+После пуша изменений в ветку main автоматически запустился workflow. Сборка прошла успешно, и сайт стал доступен по адресу:
 
 text
+https://[имя-пользователя].github.io/my-static-site/
+Отладка: При первой попытке возникла ошибка прав доступа. Решение: в файле workflow были явно прописаны permissions для pages, contents и id-token, что является обязательным требованием для работы deploy-pages.
 
-Plain textANTLR4BashCC#CSSCoffeeScriptCMakeDartDjangoDockerEJSErlangGitGoGraphQLGroovyHTMLJavaJavaScriptJSONJSXKotlinLaTeXLessLuaMakefileMarkdownMATLABMarkupObjective-CPerlPHPPowerShell.propertiesProtocol BuffersPythonRRubySass (Sass)Sass (Scss)SchemeSQLShellSwiftSVGTSXTypeScriptWebAssemblyYAMLXML`   https://username.github.io/my-static-site/   `
+# Исследовательская часть
+В рамках работы были изучены следующие вопросы:
 
-**Возникшая проблема и её решение:**При первом запуске workflow упал с ошибкой прав доступа. Проблема была устранена явным указанием блока permissions в файле deploy.yml. Без этого экшен deploy-pages не может получить необходимый JWT-токен для деплоя.
+## 1. Возможности использования отечественных CDN для ускорения доставки контента
+Использование CDN (Content Delivery Network) критически важно для быстрой загрузки сайта у пользователей из разных регионов. Российские аналоги зарубежных CDN активно развиваются.
 
-Исследовательская часть
------------------------
+NGENIX (ngenix.net): Один из лидеров рынка. Предоставляет услуги CDN, защиты от DDoS, видео-платформу. Интегрируется с Яндекс.Облаком и Selectel. Хорошо подходит для крупных медиапроектов и интернет-магазинов.
 
-### 4.1. Возможности использования отечественных CDN для ускорения доставки контента
+CDNvideo (cdnvideo.ru): Ещё один крупный игрок. Предлагает кэширование контента, динамическую оптимизацию изображений, защиту контента.
 
-CDN (Content Delivery Network) позволяет ускорить загрузку сайта для пользователей из разных регионов за счёт кэширования контента на географически распределённых серверах. Российские аналоги активно развиваются и могут быть интегрированы со статическими сайтами.
+DDOS-GUARD (ddos-guard.net): Известен защитой от DDoS-атак, но также предоставляет мощную CDN с узлами не только в РФ, но и по всему миру.
 
-ПровайдерОсобенности**NGENIX** ([ngenix.net](https://ngenix.net/))Крупный российский CDN-провайдер, интеграция с Яндекс.Облаком и Selectel, защита от DDoS. Подходит для медиа и интернет-магазинов.**CDNvideo** ([cdnvideo.ru](https://cdnvideo.ru/))Кэширование, оптимизация изображений, защита контента.**DDOS-GUARD** ([ddos-guard.net](https://ddos-guard.net/))Известен защитой от DDoS, но также предоставляет глобальную CDN с узлами в РФ и за рубежом.
+Cloudflare в РФ: Формально не является отечественным, но имеет узлы в РФ и пользуется популярностью. Однако в условиях текущих реалий использование российских сервисов даёт преимущества в юрисдикции и стабильности оплаты.
 
-**Применение для статического сайта:**Статические файлы (HTML, CSS, JS, изображения) идеально кэшируются. Для использования CDN с GitHub Pages необходимо:
+Применение для статического сайта: Статические файлы (HTML, CSS, JS, изображения) идеально кэшируются. Для ускорения доставки сайта с GitHub Pages можно настроить кастомный домен и подключить его к одному из вышеуказанных CDN, настроив CNAME-запись на провайдера.
 
-1.  Подключить к репозиторию **кастомный домен**.
-    
-2.  Настроить CNAME-запись на CDN-провайдера.
-    
-3.  Настроить правила кэширования в личном кабинете CDN.
-    
+## 2. Возможности GitVerse для реализации CI/CD
+GitVerse — российская платформа для хостинга Git-репозиториев, аналог GitHub.
 
-### 4.2. Возможности GitVerse для реализации CI/CD
+Наличие CI/CD: GitVerse включает встроенный модуль GitVerse Actions (находится в стадии активного развития). Интерфейс и логика работы схожи с GitHub Actions. Пайплайны описываются в YAML-файлах и хранятся в директории .gitverse/workflows/.
 
-**GitVerse** — российская платформа для хостинга Git-репозиториев, аналог GitHub. На текущий момент она предоставляет:
+Экосистема: В маркете платформы доступны готовые действия для сборки проектов на разных языках (Python, Node.js, Java). Существует действие для деплоя на статический хостинг (например, s3-uploader для загрузки в Object Storage S3).
 
-*   **GitVerse Actions** — встроенный CI/CD, совместимый по синтаксису с GitHub Actions. Пайплайны описываются в YAML-файлах в директории .gitverse/workflows/.
-    
-*   **GitVerse Pages** — сервис для хостинга статических сайтов, аналогичный GitHub Pages. Деплой может выполняться либо пушем в специальную ветку (например, pages), либо через Actions.
-    
-*   **Маркет действий** — есть готовые шаги для сборки проектов на Python, Node.js, Java, а также для загрузки в S3-хранилища.
-    
+Хостинг: Платформа предоставляет возможность GitVerse Pages. Это полный аналог GitHub Pages. Деплой происходит путём пушей в специальную ветку (например, pages) или через Actions. Это делает GitVerse прямой и полноценной заменой GitHub для данной задачи.
 
-**Вывод:** GitVerse является полноценной заменой GitHub для данной задачи. Процесс настройки был бы идентичным, за исключением замены github-pages на gitverse-pages и использования соответствующего экшена для деплоя.
+Вывод: Для развертывания статического сайта в рамках РФ GitVerse является предпочтительной альтернативой. Процесс настройки был бы полностью идентичен проделанному выше, но с адаптацией синтаксиса workflow под GitVerse Actions и деплоем на GitVerse Pages.
 
-### 4.3. Варианты деплоя статического сайта в продакшен-среду
+## 3. Варианты деплоя статического сайта в продакшен среду
+Существует множество способов деплоя, выбор которых зависит от масштаба проекта и требований к инфраструктуре.
 
-Существует множество способов размещения статических сайтов. Выбор зависит от требований к масштабируемости, контролю и бюджету.
+Платформенные хостинги (PaaS/SaaS)
+GitHub Pages / GitLab Pages: Идеально для проектов с открытым кодом и личных страниц. Бесплатно, просто, интегрировано с Git.
 
-КатегорияПлатформы / ИнструментыОписание / Примеры**PaaS / SaaS хостинги**GitHub Pages, GitLab Pages, Netlify, Vercel, Cloudflare PagesПростота настройки, автоматический деплой по пушу, встроенные CDN, часто бесплатно для открытых проектов.**Объектные хранилища (S3)**Amazon S3, Yandex Object Storage, VK Cloud Storage, [Mail.ru](https://mail.ru/) Cloud StorageГибкость, масштабирование, низкая стоимость. Требуется настройка бакета на статический хостинг. Инструменты: AWS CLI, s3 sync, Terraform, Ansible.**Традиционные серверы (VPS/VDS)**Helios, Timeweb, FirstVDS, собственный серверПолный контроль над окружением. Устанавливается веб-сервер (Nginx, Apache), деплой через Git pull или rsync. Инструменты автоматизации: Capistrano, Fabric, bash-скрипты с rsync, SSH-экшены (например, appleboy/scp-action).
+Netlify / Vercel: «Золотой стандарт» для фронтенд-разработчиков. Автоматический деплой по пушу, Preview Deployments для каждого PR, Serverless-функции, формы, глобальный CDN.
 
-**Сравнение:**
+Cloudflare Pages: Аналогично, но с использованием сети Cloudflare.
 
-*   **GitHub Pages** — идеально для быстрого старта и документации.
-    
-*   **Netlify / Vercel** — дополнительные функции (формы, функции, preview deployments).
-    
-*   **Yandex Object Storage** — подходит для проектов, ориентированных на российских пользователей, с возможностью подключения отечественного CDN.
-    
-*   **Собственный сервер** — максимальный контроль, но требует администрирования.
-    
+Объектные хранилища (S3-совместимые)
+Amazon S3, Yandex Object Storage, VK Cloud Storage, Mail.ru Cloud Storage.
 
-Заключение
-----------
+Процесс: сборка статики → синхронизация файлов с бакетом (например, через AWS CLI или утилиту s3cmd). Бакет настраивается на статический хостинг.
 
-В ходе работы был создан статический сайт с помощью MkDocs, настроен автоматический деплой на GitHub Pages через GitHub Actions. Исследованы альтернативные инструменты: российские CDN, платформа GitVerse со встроенными CI/CD и Pages, а также различные стратегии деплоя статических сайтов. Полученные знания позволяют гибко выбирать стек технологий в зависимости от требований проекта и региона развёртывания.
+Инструменты: AWS CLI, s3 sync, Terraform (для создания инфраструктуры как код), Ansible.
+
+Традиционные серверы
+VPS/VDS (Helios, Timeweb, FirstVDS).
+
+Процесс: на сервер устанавливается веб-сервер (Nginx, Apache). Деплой происходит либо через Git (git pull), либо через копирование файлов по SSH (rsync/scp).
+
+Инструменты: Capistrano, Fabric, простые bash-скрипты с rsync. В пайплайне GitHub Actions используются сторонние экшены (например, appleboy/scp-action или easingthemes/ssh-deploy).
+
+Сравнение: GitHub Pages — быстрый старт; Netlify / Yandex Object Storage — масштабирование и гибкость; собственный сервер — максимальный контроль.
+
+# Заключение
+В ходе работы был развернут полноценный конвейер CI/CD для статического сайта. Изученные альтернативы (российские CDN, GitVerse) позволяют создать полностью импортонезависимый стек для аналогичных задач. Выбранный метод (GitHub Pages + Actions) является актуальным и современным стандартом для быстрого развертывания проектов с документацией.
