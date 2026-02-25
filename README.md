@@ -60,8 +60,7 @@
 
     yaml
 
-    site_name: Мой статический сайт на MkDocs
-    theme: readthedocs
+    site_name: My Docs
 
 ### Локальный запуск для проверки
 
@@ -92,58 +91,41 @@ mkdocs serve
 
 Содержимое файла `deploy.yml`:
 
-yaml
-
-name: Deploy MkDocs to Pages
+name: Deploy MkDocs site to GitHub Pages
 
 on:
   push:
-    branches: ["main"]
-  workflow_dispatch:
+    branches:
+      - main
 
 permissions:
-  contents: read
-  pages: write
-  id-token: write
-
-concurrency:
-  group: "pages"
-  cancel-in-progress: false
+  contents: write
 
 jobs:
-  build:
+  build-and-deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Python
+      - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
+          python-version: '3.10'
 
       - name: Install dependencies
         run: |
           pip install mkdocs
 
       - name: Build site
-        run: mkdocs build
+        run: mkdocs build --site-dir site
 
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: 'site/'
-
-  deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
-    needs: build
-    steps:
       - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./site
+          publish_branch: gh-pages
 
 ### Настройка GitHub Pages
 
@@ -156,9 +138,7 @@ jobs:
 
 text
 
-https://[имя-пользователя].github.io/my-static-site/
-
-Отладка: При первой попытке возникла ошибка прав доступа. Решение: в файле workflow были явно прописаны `permissions` для `pages`, `contents` и `id-token`, что является обязательным требованием для работы `deploy-pages`.
+https://darksidefriend.github.io/python_task2.1/
 
 * * * * *
 
@@ -199,15 +179,15 @@ GitVerse --- российская платформа для хостинга Gi
 
 #### Платформенные хостинги (PaaS/SaaS)
 
--   GitHub Pages / GitLab Pages: Идеально для проектов с открытым кодом и личных страниц. Бесплатно, просто, интегрировано с Git.
+-   GitHub Pages / GitLab Pages: Идеально для проектов с открытым кодом и личных страниц.
 
--   Netlify / Vercel: «Золотой стандарт» для фронтенд-разработчиков. Автоматический деплой по пушу, Preview Deployments для каждого PR, Serverless-функции, формы, глобальный CDN.
+-   Netlify / Vercel: Cтандарт для фронтенд-разработчиков. Автоматический деплой по пушу, Preview Deployments для каждого PR, Serverless-функции, формы, глобальный CDN.
 
 -   Cloudflare Pages: Аналогично, но с использованием сети Cloudflare.
 
 #### Объектные хранилища (S3-совместимые)
 
--   Amazon S3, Yandex Object Storage, VK Cloud Storage, [Mail.ru](https://mail.ru/) Cloud Storage.
+-   Amazon S3, Yandex Object Storage, VK Cloud Storage, Mail.ru Cloud Storage.
 
 -   Процесс: сборка статики → синхронизация файлов с бакетом (например, через AWS CLI или утилиту `s3cmd`). Бакет настраивается на статический хостинг.
 
@@ -221,7 +201,7 @@ GitVerse --- российская платформа для хостинга Gi
 
 -   Инструменты: Capistrano, Fabric, простые bash-скрипты с `rsync`. В пайплайне GitHub Actions используются сторонние экшены (например, `appleboy/scp-action` или `easingthemes/ssh-deploy`).
 
-Сравнение: GitHub Pages --- быстрый старт; Netlify / Yandex Object Storage --- масштабирование и гибкость; собственный сервер --- максимальный контроль.
+Сравнение: GitHub Pages - быстрый старт; Netlify / Yandex Object Storage - масштабирование и гибкость; собственный сервер - максимальный контроль.
 
 Заключение
 ----------
